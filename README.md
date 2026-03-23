@@ -29,15 +29,9 @@ Every stage maps to a specific command. `/flow` tells you which one.
 
 ## Quick Start
 
-### New project
-```bash
-mkdir my-project && cd my-project && git init
-curl -fsSL https://raw.githubusercontent.com/hgahlot/claude-flow/main/setup.sh | bash
-```
+### Adding to an existing project (most common)
 
-Then start Claude Code and run `/flow` — it will detect you're starting fresh and guide you through project initialization.
-
-### Existing project
+If you already have a git repo with Claude Code set up:
 
 ```bash
 cd /your/existing/project
@@ -45,45 +39,71 @@ git clone https://github.com/hgahlot/claude-flow.git /tmp/claude-flow
 bash /tmp/claude-flow/setup.sh --skip-templates
 ```
 
-This installs all the tools and commands without overwriting your existing project files. Here's what happens:
+This installs everything without touching your existing files:
 
-**Installed (always):**
-- All 6 tools (GSD, gstack, Superpowers, Claude-Mem, UI/UX Pro Max, ralph-wiggum)
-- All slash commands (`/flow`, `/plan`, `/tdd`, `/checkpoint`, `/build-fix`, `/multi-execute`, `/update`, `/discover`, `/integrate`)
-- Session health check hook
-- `settings.json` with hook configuration (merges with existing if GSD already created one)
+**What gets installed:**
+- All 6 tools globally (gstack, Superpowers, Claude-Mem, ralph-wiggum) and locally (GSD, UI/UX Pro Max)
+- All slash commands into `.claude/commands/` — `/flow`, `/plan`, `/tdd`, `/checkpoint`, `/build-fix`, `/multi-execute`, `/update`, `/discover`, `/integrate`
+- Session health check hook into `.claude/hooks/`
+- `settings.json` — **smart-merged** with your existing one (appends the health check hook without overwriting your existing hooks/settings)
 - Weekly discovery cron job
 
-**Skipped with `--skip-templates`:**
-- `CLAUDE.md`, `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md` — your existing files are untouched
+**What's left untouched:**
+- Your `CLAUDE.md`, `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`
+- Your existing `.claude/settings.local.json`
+- Any existing commands, hooks, or skills you already have
 
-**After setup:**
+#### Wiring up your CLAUDE.md (important)
 
-```bash
-claude                       # start Claude Code
-/flow                        # see the full pipeline and what to do next
-/integrate best-practices.md # bring in your team's existing practices
-/discover                    # see what Claude Code tools are trending
+The one thing setup can't do automatically is update your existing `CLAUDE.md` with the tool routing table. This table is what makes `/flow` work — it tells Claude which tool to use for each situation, lists all available commands, and defines the agent pipeline.
+
+After running setup, start Claude Code and run:
+
+```
+/integrate /tmp/claude-flow/templates/CLAUDE.md
 ```
 
-If you don't have a `CLAUDE.md` yet, run setup **without** `--skip-templates` — it will create one with the full tool routing table, or you can create it later:
+This reads the template, identifies the sections (tool tables, routing rules, TDD mandate, agent pipeline, commit discipline, etc.), and offers to merge them into your existing `CLAUDE.md` without overwriting your project-specific content.
+
+Or, if you prefer to do it manually, the key sections to copy from `/tmp/claude-flow/templates/CLAUDE.md` into yours are:
+
+- **Installed Tools & Commands** — tables listing all GSD, gstack, and built-in commands
+- **Tool Routing** — the "which tool wins when they overlap" decision matrix
+- **Development Flow** — the pipeline reference pointing to `/flow`
+- **Agent Pipeline** — the agent spawn sequence for features
+
+#### After setup
 
 ```bash
-bash /tmp/claude-flow/setup.sh              # includes CLAUDE.md and all templates
-bash /tmp/claude-flow/setup.sh --force      # overwrite existing files (use carefully)
+claude                                          # start Claude Code
+/flow                                           # see the full pipeline and what to do next
+/integrate /tmp/claude-flow/templates/CLAUDE.md  # merge tool routing into your CLAUDE.md
+/integrate best-practices.md                     # bring in your team's existing practices
+/discover                                        # see what Claude Code tools are trending
 ```
 
-> **Note:** The project must be a git repository. If it isn't, run `git init` first.
+#### Already using some of these tools?
 
-### Already using some of these tools?
-
-If you already have gstack, Superpowers, or other tools installed globally, skip the global phase:
+If you already have gstack, Superpowers, or other tools installed globally:
 
 ```bash
 bash /tmp/claude-flow/setup.sh --skip-global --skip-templates
 ```
 
 This only installs the local tools (GSD, UI/UX Pro Max) and the flow integration layer (commands, hooks, settings). The setup script is idempotent — it won't overwrite existing files unless you pass `--force`.
+
+### New project
+
+```bash
+mkdir my-project && cd my-project && git init
+curl -fsSL https://raw.githubusercontent.com/hgahlot/claude-flow/main/setup.sh | bash
+```
+
+This installs everything including a full `CLAUDE.md` with the tool routing table, plus `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, and `STATE.md` templates.
+
+Then start Claude Code and run `/flow` — it will detect you're starting fresh and guide you through project initialization.
+
+> **Note:** The project must be a git repository. If it isn't, run `git init` first.
 
 ## Setup Options
 
