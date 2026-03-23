@@ -433,11 +433,18 @@ Update a single tool:
 /gstack-upgrade    ← gstack only
 ```
 
-Discover and integrate new tools from GitHub trending:
+Discover new tools from GitHub trending:
 ```
 /discover
 ```
 > Scans weekly trending repos for Claude Code skills, plugins, commands, and hooks. Presents findings for your approval before installing anything.
+
+Bring a specific resource into the flow system:
+```
+/integrate <source>
+```
+> Accepts a GitHub repo, local path, npm package, single file, or best practices document. Analyzes it, explains what it provides, and integrates with your approval.
+> Examples: `/integrate https://github.com/owner/repo`, `/integrate ./my-skill/`, `/integrate best-practices.md`
 
 ---
 
@@ -482,5 +489,6 @@ When the user describes a situation, map it to the right stage or section:
 | "slower model", "faster model", "change model", "opus", "haiku" | CONFIG |
 | "update tools", "upgrade", "get latest", "update everything" | CONFIG (/update) |
 | "new tools", "discover", "trending", "what's new", "find plugins" | CONFIG (/discover) |
+| "add a tool", "integrate", "bring in", "install this", "add this repo", "add best practices" | CONFIG (/integrate) |
 | "validate the idea", "should I build this" | THINK |
 | "design it", "UI design", "design system" | DESIGN |

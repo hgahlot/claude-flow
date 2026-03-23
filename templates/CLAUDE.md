@@ -71,6 +71,7 @@ Key commands:
 | `/multi-execute` | Spawn parallel subagents for independent tasks |
 | `/update` | Update all tools to latest and re-apply flow integration layer |
 | `/discover` | Scan GitHub trending for new Claude Code tools and integrate with approval |
+| `/integrate` | Bring any repo, file, package, or best practices doc into the flow system |
 
 ---
 

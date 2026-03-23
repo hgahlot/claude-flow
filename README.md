@@ -16,6 +16,7 @@ Installs and configures 6 tools + a unified `/flow` command that routes every de
 | **ralph-wiggum** | Autonomous iterative agent loops until task completion |
 | **/flow** | Unified command router — tells you exactly what to run at every stage |
 | **/discover** | Weekly scan of GitHub trending for new Claude Code tools — auto-integrates with approval |
+| **/integrate** | Bring any repo, file, package, or best practices doc into the flow system |
 
 ## The Pipeline
 
@@ -87,6 +88,7 @@ Options:
 .claude/commands/multi-execute.md # /multi-execute — parallel subagents
 .claude/commands/update.md       # /update — update all tools to latest
 .claude/commands/discover.md     # /discover — find and integrate trending Claude Code tools
+.claude/commands/integrate.md    # /integrate — bring any resource into the flow system
 .claude/hooks/session-health-check.js  # Verifies memory/state on every session start
 .claude/skills/ui-ux-pro-max/   # UI/UX Pro Max design skill
 .claude/settings.json           # Hooks configuration
@@ -137,6 +139,21 @@ node ~/.claude-flow/discover.js --check      # just check, don't save report
 ```
 
 The cron runs every Monday at 9 AM. Discoveries show up in the session health check.
+
+### Manual Integration
+
+Bring any resource into the flow system with `/integrate`:
+
+```
+/integrate https://github.com/owner/repo          # GitHub repo (skills, plugins, commands, hooks)
+/integrate ./path/to/local/skill                   # local directory
+/integrate ./my-hook.js                            # single file (command, hook, agent)
+/integrate some-npm-package                        # npm/bun CLI tool
+/integrate https://example.com/best-practices.md   # best practices document
+/integrate                                         # then describe or paste content inline
+```
+
+It analyzes the source, shows what it found (commands, hooks, skills, agents, best practices), explains what changes it would make, and asks for permission before installing anything.
 
 ## Prerequisites
 
