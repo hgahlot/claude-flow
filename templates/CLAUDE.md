@@ -69,6 +69,8 @@ Key commands:
 | `/checkpoint` | Save current state to STATE.md |
 | `/build-fix` | Systematic root cause debugging |
 | `/multi-execute` | Spawn parallel subagents for independent tasks |
+| `/update` | Update all tools to latest and re-apply flow integration layer |
+| `/discover` | Scan GitHub trending for new Claude Code tools and integrate with approval |
 
 ---
 

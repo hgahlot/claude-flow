@@ -421,15 +421,23 @@ GSD workflow settings:
 /gsd:settings
 ```
 
-Update GSD to latest:
+Update all tools and flow integration layer:
 ```
-/gsd:update
+/update
+```
+> Fetches latest from all upstream repos, updates npm/bun packages, and re-applies flow commands and hooks.
+
+Update a single tool:
+```
+/gsd:update        ← GSD only
+/gstack-upgrade    ← gstack only
 ```
 
-Update gstack to latest:
+Discover and integrate new tools from GitHub trending:
 ```
-/gstack-upgrade
+/discover
 ```
+> Scans weekly trending repos for Claude Code skills, plugins, commands, and hooks. Presents findings for your approval before installing anything.
 
 ---
 
@@ -472,5 +480,7 @@ When the user describes a situation, map it to the right stage or section:
 | "understand the code", "explore", "map it" | EXPLORE |
 | "write tests", "audit coverage", "validate" | AUDIT |
 | "slower model", "faster model", "change model", "opus", "haiku" | CONFIG |
+| "update tools", "upgrade", "get latest", "update everything" | CONFIG (/update) |
+| "new tools", "discover", "trending", "what's new", "find plugins" | CONFIG (/discover) |
 | "validate the idea", "should I build this" | THINK |
 | "design it", "UI design", "design system" | DESIGN |

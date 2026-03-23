@@ -15,6 +15,7 @@ Installs and configures 6 tools + a unified `/flow` command that routes every de
 | **Claude-Mem** | Persistent cross-session memory via SQLite + vector search |
 | **ralph-wiggum** | Autonomous iterative agent loops until task completion |
 | **/flow** | Unified command router — tells you exactly what to run at every stage |
+| **/discover** | Weekly scan of GitHub trending for new Claude Code tools — auto-integrates with approval |
 
 ## The Pipeline
 
@@ -84,6 +85,8 @@ Options:
 .claude/commands/checkpoint.md  # /checkpoint — state persistence
 .claude/commands/build-fix.md   # /build-fix — root cause debugging
 .claude/commands/multi-execute.md # /multi-execute — parallel subagents
+.claude/commands/update.md       # /update — update all tools to latest
+.claude/commands/discover.md     # /discover — find and integrate trending Claude Code tools
 .claude/hooks/session-health-check.js  # Verifies memory/state on every session start
 .claude/skills/ui-ux-pro-max/   # UI/UX Pro Max design skill
 .claude/settings.json           # Hooks configuration
@@ -101,6 +104,8 @@ docs/development-flow.md        # Complete command reference
 **Claude-Mem** and **UI/UX Pro Max** are purely additive.
 
 When tools overlap, `/flow` and `CLAUDE.md` contain the routing table that resolves conflicts.
+
+**`/discover`** scans GitHub weekly trending for new tools and integrates them into the flow system with your approval.
 
 ## Usage Examples
 
@@ -121,6 +126,18 @@ Also accepts natural language:
 "I'm done for the day"           → routes to /gsd:pause-work
 ```
 
+## Tool Discovery
+
+A weekly cron job scans [GitHub trending](https://github.com/trending?since=weekly) for new Claude Code tools (skills, plugins, commands, hooks, MCP servers). Run `/discover` to review findings and integrate approved tools into the flow system.
+
+```bash
+/discover                                    # review and integrate trending tools
+node ~/.claude-flow/discover.js              # run discovery manually from CLI
+node ~/.claude-flow/discover.js --check      # just check, don't save report
+```
+
+The cron runs every Monday at 9 AM. Discoveries show up in the session health check.
+
 ## Prerequisites
 
 - **Claude Code** (latest version)
@@ -131,6 +148,22 @@ Also accepts natural language:
 
 ## Updating Tools
 
+Update everything at once (tools + flow integration layer):
+```bash
+# From within Claude Code
+/update
+
+# From the command line
+bash /tmp/claude-flow/update.sh
+
+# Check for updates without applying
+bash /tmp/claude-flow/update.sh --check
+
+# Update a specific tool only
+bash /tmp/claude-flow/update.sh --tool gstack
+```
+
+Or update individual tools manually:
 ```bash
 # GSD
 npx get-shit-done-cc@latest --claude --local

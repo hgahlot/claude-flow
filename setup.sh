@@ -319,6 +319,8 @@ safe_copy "$SCRIPT_DIR/commands/tdd.md"            ".claude/commands/tdd.md"
 safe_copy "$SCRIPT_DIR/commands/checkpoint.md"     ".claude/commands/checkpoint.md"
 safe_copy "$SCRIPT_DIR/commands/build-fix.md"      ".claude/commands/build-fix.md"
 safe_copy "$SCRIPT_DIR/commands/multi-execute.md"  ".claude/commands/multi-execute.md"
+safe_copy "$SCRIPT_DIR/commands/update.md"         ".claude/commands/update.md"
+safe_copy "$SCRIPT_DIR/commands/discover.md"      ".claude/commands/discover.md"
 
 # ── Session health check hook ───────────────────────────────────────────────
 
@@ -415,6 +417,36 @@ for entry in "${GITIGNORE_ENTRIES[@]}"; do
 done
 
 # ══════════════════════════════════════════════════════════════════════════════
+# PHASE 7: Weekly discovery cron job
+# ══════════════════════════════════════════════════════════════════════════════
+
+step "Phase 7: Weekly Discovery Cron"
+
+# Copy discover.js to a stable location
+mkdir -p "$HOME/.claude-flow"
+cp "$SCRIPT_DIR/discover.js" "$HOME/.claude-flow/discover.js"
+ok "Installed discover.js to ~/.claude-flow/"
+
+# Set up weekly cron job (Monday 9 AM) if not already present
+CRON_CMD="node $HOME/.claude-flow/discover.js --cron --quiet"
+if crontab -l 2>/dev/null | grep -qF "claude-flow/discover.js"; then
+  ok "Weekly discovery cron already installed"
+else
+  # Add to existing crontab (preserve existing entries)
+  (crontab -l 2>/dev/null; echo "0 9 * * 1 $CRON_CMD >> $HOME/.claude-flow/discover.log 2>&1") | crontab -
+  if [ $? -eq 0 ]; then
+    ok "Weekly discovery cron installed (Mondays at 9 AM)"
+  else
+    warn "Could not install cron job — run manually: node ~/.claude-flow/discover.js"
+  fi
+fi
+
+# Run initial discovery in background
+info "Running initial tool discovery in background..."
+node "$HOME/.claude-flow/discover.js" --quiet &>/dev/null &
+disown 2>/dev/null || true
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Done
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -432,15 +464,20 @@ echo -e "  ${GREEN}Local (this project):${NC}"
 echo "    GSD              .claude/commands/gsd/ + .claude/agents/"
 echo "    UI/UX Pro Max    .claude/skills/ui-ux-pro-max/"
 echo "    /flow wrapper    .claude/commands/flow.md"
-echo "    Custom commands  .claude/commands/{plan,tdd,checkpoint,build-fix,multi-execute}.md"
+echo "    Custom commands  .claude/commands/{plan,tdd,checkpoint,build-fix,multi-execute,update,discover}.md"
 echo "    Health check     .claude/hooks/session-health-check.js"
 echo "    CLAUDE.md        Project root"
+echo ""
+echo -e "  ${GREEN}Automation:${NC}"
+echo "    Discovery cron   Mondays 9 AM — scans GitHub trending for new Claude Code tools"
+echo "    Discovery engine ~/.claude-flow/discover.js"
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
 echo ""
 echo "  1. Edit CLAUDE.md — fill in the Project Overview section"
 echo "  2. Start Claude Code:  claude"
 echo "  3. Run:  /flow"
+echo "  4. Run:  /discover   (see what Claude Code tools are trending this week)"
 echo ""
 echo "  /flow will detect you're starting fresh and guide you through project initialization."
 echo ""
