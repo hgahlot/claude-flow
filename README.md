@@ -35,24 +35,55 @@ mkdir my-project && cd my-project && git init
 curl -fsSL https://raw.githubusercontent.com/hgahlot/claude-flow/main/setup.sh | bash
 ```
 
+Then start Claude Code and run `/flow` — it will detect you're starting fresh and guide you through project initialization.
+
 ### Existing project
+
 ```bash
 cd /your/existing/project
-curl -fsSL https://raw.githubusercontent.com/hgahlot/claude-flow/main/setup.sh | bash --skip-templates
-```
-
-### Clone and run
-```bash
 git clone https://github.com/hgahlot/claude-flow.git /tmp/claude-flow
-cd /your/project
-bash /tmp/claude-flow/setup.sh
+bash /tmp/claude-flow/setup.sh --skip-templates
 ```
 
-### After setup
+This installs all the tools and commands without overwriting your existing project files. Here's what happens:
+
+**Installed (always):**
+- All 6 tools (GSD, gstack, Superpowers, Claude-Mem, UI/UX Pro Max, ralph-wiggum)
+- All slash commands (`/flow`, `/plan`, `/tdd`, `/checkpoint`, `/build-fix`, `/multi-execute`, `/update`, `/discover`, `/integrate`)
+- Session health check hook
+- `settings.json` with hook configuration (merges with existing if GSD already created one)
+- Weekly discovery cron job
+
+**Skipped with `--skip-templates`:**
+- `CLAUDE.md`, `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md` — your existing files are untouched
+
+**After setup:**
+
 ```bash
-claude          # start Claude Code
-/flow           # what should I do next?
+claude                       # start Claude Code
+/flow                        # see the full pipeline and what to do next
+/integrate best-practices.md # bring in your team's existing practices
+/discover                    # see what Claude Code tools are trending
 ```
+
+If you don't have a `CLAUDE.md` yet, run setup **without** `--skip-templates` — it will create one with the full tool routing table, or you can create it later:
+
+```bash
+bash /tmp/claude-flow/setup.sh              # includes CLAUDE.md and all templates
+bash /tmp/claude-flow/setup.sh --force      # overwrite existing files (use carefully)
+```
+
+> **Note:** The project must be a git repository. If it isn't, run `git init` first.
+
+### Already using some of these tools?
+
+If you already have gstack, Superpowers, or other tools installed globally, skip the global phase:
+
+```bash
+bash /tmp/claude-flow/setup.sh --skip-global --skip-templates
+```
+
+This only installs the local tools (GSD, UI/UX Pro Max) and the flow integration layer (commands, hooks, settings). The setup script is idempotent — it won't overwrite existing files unless you pass `--force`.
 
 ## Setup Options
 
