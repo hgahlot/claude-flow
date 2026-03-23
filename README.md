@@ -2,7 +2,7 @@
 
 One-command bootstrap for a maximally efficient Claude Code development environment.
 
-Installs and configures 6 tools + a unified `/flow` command that routes every development scenario to the right tool — so you only need to remember one command.
+Installs and configures 6 tools + a unified `/flow` command that routes every development scenario to the right tool — so you only need to remember one command. The system continuously evolves: it discovers new Claude Code tools from GitHub trending, lets you integrate any repo/skill/plugin/document on demand, and keeps everything up to date automatically.
 
 ## What You Get
 
@@ -74,6 +74,10 @@ Options:
 ~/.claude/plugins/obra/superpowers/         # Superpowers (14 auto-triggering skills)
 ~/.claude/plugins/marketplaces/thedotmack/  # Claude-Mem (session memory)
 ~/.bun/bin/ralph                            # ralph-wiggum (autonomous loops)
+~/.claude-flow/discover.js                  # Tool discovery engine (weekly cron)
+~/.claude-flow/integrate.js                 # Tool integration analysis engine
+~/.claude-flow/discoveries.json             # Latest discovery report
+~/.claude-flow/discovery-history.json       # Seen/installed tool history
 ```
 
 ### Local (per project)
@@ -107,8 +111,6 @@ docs/development-flow.md        # Complete command reference
 
 When tools overlap, `/flow` and `CLAUDE.md` contain the routing table that resolves conflicts.
 
-**`/discover`** scans GitHub weekly trending for new tools and integrates them into the flow system with your approval.
-
 ## Usage Examples
 
 ```
@@ -128,32 +130,119 @@ Also accepts natural language:
 "I'm done for the day"           → routes to /gsd:pause-work
 ```
 
-## Tool Discovery
+## Keeping the System Alive
 
-A weekly cron job scans [GitHub trending](https://github.com/trending?since=weekly) for new Claude Code tools (skills, plugins, commands, hooks, MCP servers). Run `/discover` to review findings and integrate approved tools into the flow system.
+claude-flow is designed to evolve alongside the rapidly growing Claude Code ecosystem. Three commands handle this:
+
+### `/update` — Keep existing tools current
+
+Pulls the latest version of every installed tool and re-applies the flow integration layer in one shot.
 
 ```bash
-/discover                                    # review and integrate trending tools
+/update                                      # update everything from within Claude Code
+
+# Or from the command line:
+bash /tmp/claude-flow/update.sh              # update all tools + flow layer
+bash /tmp/claude-flow/update.sh --check      # check for updates without applying
+bash /tmp/claude-flow/update.sh --tool gstack # update a specific tool only
+bash /tmp/claude-flow/update.sh --skip-flow  # update tools but not flow integration
+```
+
+What it does for each tool type:
+- **Git-cloned tools** (gstack, Superpowers, Claude-Mem): fetches from upstream, shows commits behind, pulls with `--ff-only`, re-runs setup/install
+- **npm tools** (GSD, UI/UX Pro Max): re-runs `npx ...@latest` to get the latest published version
+- **Bun packages** (ralph-wiggum): `bun add -g` to update
+- **Flow layer**: diffs each command/hook against upstream and only copies if changed; warns if `CLAUDE.md` template has new routing rules (never overwrites your customized copy)
+
+### `/discover` — Find new tools automatically
+
+A weekly cron job scans [GitHub trending](https://github.com/trending?since=weekly) for new Claude Code tools. It finds skills, plugins, commands, hooks, and MCP servers — then waits for your approval before installing anything.
+
+```bash
+/discover                                    # review findings and integrate approved tools
 node ~/.claude-flow/discover.js              # run discovery manually from CLI
 node ~/.claude-flow/discover.js --check      # just check, don't save report
 ```
 
-The cron runs every Monday at 9 AM. Discoveries show up in the session health check.
+**How discovery works:**
+1. Fetches the weekly trending page and parses all repo entries
+2. Filters by keywords (`claude`, `anthropic`, `mcp-server`, etc.) in repo names and descriptions
+3. Deep-analyzes each match: fetches the README, checks the repo file tree via GitHub API for Claude Code markers (`.claude-plugin/`, `SKILL.md`, `.claude/commands/`, hooks, `.mcp.json`)
+4. Also samples non-keyword repos for structural matches (catches tools that don't mention "claude" in their name but have `.claude/` directories)
+5. Scores and ranks discoveries, generates integration plans with install steps and flow routing changes
+6. Saves a report to `~/.claude-flow/discoveries.json`
 
-### Manual Integration
+The cron runs every **Monday at 9 AM**. When new discoveries are available, the session health check shows:
+```
+✓ 5 new tool(s) found in trending repos — run /discover to review
+```
 
-Bring any resource into the flow system with `/integrate`:
+History tracking ensures already-seen and already-installed tools aren't re-suggested.
+
+### `/integrate` — Bring in anything manually
+
+Point `/integrate` at any resource and it will analyze it, explain what it provides, detect conflicts with existing tools, and wire it into the flow system with your permission.
 
 ```
-/integrate https://github.com/owner/repo          # GitHub repo (skills, plugins, commands, hooks)
+/integrate https://github.com/owner/repo          # GitHub repo
 /integrate ./path/to/local/skill                   # local directory
-/integrate ./my-hook.js                            # single file (command, hook, agent)
+/integrate ./my-hook.js                            # single file (command, hook, skill, agent)
 /integrate some-npm-package                        # npm/bun CLI tool
 /integrate https://example.com/best-practices.md   # best practices document
 /integrate                                         # then describe or paste content inline
 ```
 
-It analyzes the source, shows what it found (commands, hooks, skills, agents, best practices), explains what changes it would make, and asks for permission before installing anything.
+**What it detects:**
+
+| Resource type | How it's identified | Where it gets installed |
+|---|---|---|
+| **Skill** | Has `SKILL.md` with YAML frontmatter | `~/.claude/skills/<name>/` or `.claude/skills/<name>/` |
+| **Plugin** | Has `.claude-plugin/` directory with `plugin.json` | `~/.claude/plugins/<owner>/<name>/` |
+| **Commands** | `.md` files in `.claude/commands/` or `commands/` | `.claude/commands/` |
+| **Hooks** | `.js` files in `.claude/hooks/` or `hooks/` | `.claude/hooks/` + registered in `settings.json` |
+| **Agents** | `.md` files in `.claude/agents/` or `agents/` | `.claude/agents/` |
+| **MCP server** | Has `.mcp.json` with server config | `~/.claude/plugins/<owner>/<name>/` + `.mcp.json` |
+| **CLI tool** | `package.json` with `bin` field | Global npm/bun install |
+| **Best practices** | Markdown doc with guidelines/conventions | Merged into existing `CLAUDE.md` sections |
+
+**After installation, it automatically:**
+- Updates `CLAUDE.md` with the new tool's commands and routing rules
+- Updates `/flow` routing so the new commands appear in the right pipeline stage
+- Registers any hooks in `settings.json` (SessionStart, PreToolUse, PostToolUse)
+- Detects conflicts with existing tools and explains overlaps
+- Runs the health check to verify everything is wired correctly
+
+**Best practices documents** are handled specially — instead of creating new files, the practices are merged into the matching sections of `CLAUDE.md` (testing practices → TDD Mandate, security → Security section, etc.).
+
+## Session Health Check
+
+A comprehensive health check runs automatically on every session start (via `settings.json` SessionStart hook). It validates 8 systems:
+
+| # | Check | What it does |
+|---|---|---|
+| 1 | **Claude-Mem worker** | Verifies background process is running; auto-restarts if crashed |
+| 2 | **STATE.md** | Exists, not a blank template, not stale (warns if >7 days old) |
+| 3 | **Auto-memory** | MEMORY.md exists and counts entries |
+| 4 | **Project files** | CLAUDE.md required; PROJECT.md, REQUIREMENTS.md, ROADMAP.md recommended |
+| 5 | **Tool installation** | GSD, gstack, Superpowers, Claude-Mem presence verified |
+| 6 | **Settings integrity** | settings.json exists, valid JSON, health check hook registered |
+| 7 | **Git status** | Repository exists, uncommitted changes count |
+| 8 | **Pending discoveries** | Shows count of new tools found by weekly trending scan |
+
+When everything is healthy:
+```
+[Health] ✓ Claude-Mem worker running (DB 42KB) · STATE.md current · Tools: GSD (50 commands), gstack, Superpowers · ...
+```
+
+When there are issues:
+```
+[Session Health Check]
+  ⚡ FIXED: Claude-Mem worker was stopped — restarted successfully
+  ⚠  ISSUE: STATE.md is stale (12 days ago) — review and update it
+  ✓  Tools: GSD (50 commands), gstack, Superpowers, Claude-Mem
+  ✓  3 new tool(s) found in trending repos — run /discover to review
+  7/8 checks passed · 1 needs attention
+```
 
 ## Prerequisites
 
@@ -163,39 +252,17 @@ It analyzes the source, shows what it found (commands, hooks, skills, agents, be
 - **Bun** (auto-installed by setup.sh if missing)
 - **Python 3** (for UI/UX Pro Max search — optional)
 
-## Updating Tools
+## Updating Individual Tools
 
-Update everything at once (tools + flow integration layer):
+If you prefer to update tools one at a time instead of using `/update`:
+
 ```bash
-# From within Claude Code
-/update
-
-# From the command line
-bash /tmp/claude-flow/update.sh
-
-# Check for updates without applying
-bash /tmp/claude-flow/update.sh --check
-
-# Update a specific tool only
-bash /tmp/claude-flow/update.sh --tool gstack
-```
-
-Or update individual tools manually:
-```bash
-# GSD
-npx get-shit-done-cc@latest --claude --local
-
-# gstack
-/gstack-upgrade
-
-# UI/UX Pro Max
-npx uipro-cli init --ai claude
-
-# Superpowers
-cd ~/.claude/plugins/obra/superpowers && git pull
-
-# Claude-Mem
-cd ~/.claude/plugins/marketplaces/thedotmack && git pull && bun install
+npx get-shit-done-cc@latest --claude --local                              # GSD
+cd ~/.claude/skills/gstack && git pull && ./setup                          # gstack (or /gstack-upgrade)
+npx uipro-cli init --ai claude                                            # UI/UX Pro Max
+cd ~/.claude/plugins/obra/superpowers && git pull                          # Superpowers
+cd ~/.claude/plugins/marketplaces/thedotmack && git pull && bun install    # Claude-Mem
+bun add -g @th0rgal/ralph-wiggum                                          # ralph-wiggum
 ```
 
 ## Troubleshooting
