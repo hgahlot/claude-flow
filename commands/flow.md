@@ -34,12 +34,20 @@ THINK → DESIGN → INIT → [ PLAN → BUILD → TEST → REVIEW → ACCEPT ] 
 > Starting something new and want to validate the idea first
 
 ```
+/ce:ideate
+```
+> Discover high-impact improvements through divergent ideation and adversarial filtering.
+- Generates grounded ideas based on your actual codebase
+- Critically evaluates each idea before presenting
+- Use when you need inspiration for what to build next
+
+```
 /office-hours
 ```
 > YC-style product forcing questions before writing a line of code.
 - Asks 6 forcing questions, researches competitors, surfaces riskiest assumptions
 - Produces a design doc with problem/solution/differentiation
-- Skip if the feature is a pure implementation task with no product ambiguity
+- Use for pure product/business validation
 
 ---
 
@@ -67,26 +75,32 @@ THINK → DESIGN → INIT → [ PLAN → BUILD → TEST → REVIEW → ACCEPT ] 
 ---
 
 ## STAGE: PLAN
-> Ready to plan a feature or phase — run all three in order
+> Ready to plan a feature or phase
 
-**Step 1 — Clarify scope:**
+**Step 1 — Brainstorm requirements (if scope is unclear):**
 ```
-/gsd:discuss-phase
+/ce:brainstorm
 ```
-> Surfaces assumptions and edge cases → creates CONTEXT.md.
-- Add `--auto` to skip interactive questions
+> Explore requirements and approaches through collaborative dialogue.
+- Interactive Q&A to sharpen scope before planning
+- Short-circuits when ceremony isn't needed
+- Produces a requirements document
 
-**Step 2 — Create the task breakdown:**
+**Step 2 — Create the implementation plan:**
 ```
-/gsd:plan-phase
+/ce:plan
 ```
-> Research → 2–5 min atomic tasks → verification loop → creates PLAN.md.
+> Transform requirements into structured implementation plans grounded in repo patterns.
+- Deep research via sub-agents (repo analysis, framework docs, git history)
+- Interactive deepening pass for complex plans
+- Use `deepen` to expand specific sections
 
 **Step 3 — Review the plan from three angles:**
 ```
 /autoplan
 ```
 > CEO review (scope/value) + eng review (test coverage, blast radius) + design review (7-pass audit).
+- Or use `/document-review` (CE) for persona-based document review
 - Fix any issues before building — do not skip this
 
 ---
@@ -95,17 +109,30 @@ THINK → DESIGN → INIT → [ PLAN → BUILD → TEST → REVIEW → ACCEPT ] 
 > Plan is approved, time to write code
 
 ```
-/gsd:execute-phase
+/ce:work
 ```
-> Wave-based parallel execution, one fresh subagent per task, atomic commits.
-- TDD (RED→GREEN→REFACTOR) is enforced automatically throughout
+> Execute plans with worktrees and task tracking, maintaining quality throughout.
+- Manages worktree isolation for parallel work
+- Tracks task progress and ensures features get finished
+
+**Full autonomous mode (plan → build → review in one shot):**
+```
+/lfg
+```
+> Full autonomous engineering workflow — plans, implements, reviews.
+
+```
+/slfg
+```
+> Same as `/lfg` but uses swarm mode for parallel execution.
 
 **If this phase has UI work:**
 ```
-/gsd:ui-phase       ← run BEFORE execute
-/gsd:execute-phase
-/gsd:ui-review      ← run AFTER execute (6-pillar audit)
+/frontend-design
 ```
+> Build web interfaces with genuine design quality. Detects existing design systems.
+- Covers composition, typography, color, motion, and copy
+- Verifies via screenshots before declaring done
 
 ---
 
@@ -128,16 +155,18 @@ Report only (no fixes):
 > QA passed, ready for code review
 
 ```
-/review
+/ce:review
 ```
-> Two-pass review: CRITICAL (must fix) + INFORMATIONAL (your call).
-- Greptile codebase analysis, adversarial pass, diff-scope-aware
+> Structured multi-agent code review with tiered persona agents.
+- Confidence-gated findings with merge/dedup pipeline
+- Multiple specialized reviewers in parallel
 - Fix all CRITICAL findings before proceeding
 
-For cross-model review (Claude + OpenAI on the same diff):
+After review — resolve feedback:
 ```
-/codex
+/resolve-pr-feedback
 ```
+> Evaluate validity of PR review comments and fix issues in parallel.
 
 ---
 
@@ -156,21 +185,30 @@ For cross-model review (Claude + OpenAI on the same diff):
 ## STAGE: SHIP
 > Acceptance passed — ship it
 
+Commit, push, and open a PR in one step:
+```
+/git-commit-push-pr
+```
+> Adaptive, value-first PR descriptions that scale with change complexity.
+
 Full release (version bump, CHANGELOG, production PR):
 ```
 /ship
 ```
 > Tests → coverage → review → CHANGELOG → bisectable commits → PR → docs updated.
 
-Lightweight phase PR (no version bump):
+Document learnings from this cycle:
 ```
-/gsd:ship
+/ce:compound
 ```
+> Capture what you learned so future work is easier.
+- Codifies patterns, decisions, and gotchas into `docs/solutions/`
 
-Clean PR branch (strips .planning/ commits):
+Refresh stale learnings:
 ```
-/gsd:pr-branch
+/ce:compound-refresh
 ```
+> Review and update existing learnings against the current codebase.
 
 ---
 
@@ -469,26 +507,40 @@ When the user describes a situation, map it to the right stage or section:
 | What they say | Show this section |
 |---|---|
 | "new project", "start from scratch" | INIT (+ THINK and DESIGN if unclear) |
-| "new feature", "start a phase", "plan something" | PLAN |
-| "build it", "implement", "write the code" | BUILD |
+| "what should I build", "give me ideas", "ideate" | THINK (`/ce:ideate`) |
+| "validate the idea", "should I build this" | THINK (`/office-hours`) |
+| "let's brainstorm", "explore requirements", "think through this" | PLAN (`/ce:brainstorm`) |
+| "new feature", "start a phase", "plan something", "plan this" | PLAN (`/ce:plan`) |
+| "deepen the plan", "deepening pass" | PLAN (`/ce:plan` deepen) |
+| "build it", "implement", "write the code" | BUILD (`/ce:work`) |
+| "just do it", "lfg", "full auto", "autonomous" | BUILD (`/lfg` or `/slfg`) |
+| "frontend", "UI work", "build the page" | BUILD (`/frontend-design`) |
 | "test it", "run QA", "check for bugs" | TEST |
-| "code review", "review my PR" | REVIEW |
+| "code review", "review my PR", "review changes" | REVIEW (`/ce:review`) |
+| "resolve feedback", "fix review comments" | REVIEW (`/resolve-pr-feedback`) |
 | "verify", "acceptance", "does it meet requirements" | ACCEPT |
-| "ship it", "release", "create a PR" | SHIP |
+| "commit and PR", "ship this", "create a PR", "push and PR" | SHIP (`/git-commit-push-pr`) |
+| "ship it", "release", "version bump" | SHIP (`/ship`) |
+| "what did I learn", "document learnings", "compound" | SHIP (`/ce:compound`) |
 | "deploy", "go live", "push to prod" | DEPLOY |
 | "is it healthy", "monitor", "check performance" | MONITOR |
 | "weekly review", "retro", "how did we do" | WEEKLY |
 | "quick task", "small fix", "one-off" | QUICK |
 | "something broke", "bug", "debug", "fix this" | DEBUG |
+| "reproduce this bug", "reproduce issue #123" | DEBUG (`/reproduce-bug`) |
 | "risky change", "migration", "protect this folder" | SAFETY |
 | "capture idea", "add to backlog", "reminder" | BACKLOG |
+| "todo", "create todo", "track this" | BACKLOG (`/todo-create`) |
+| "triage todos", "review todos" | BACKLOG (`/todo-triage`) |
 | "add a phase", "change the roadmap", "new milestone" | MILESTONE |
 | "pause", "save state", "hand off", "resume", "context" | SESSION |
 | "understand the code", "explore", "map it" | EXPLORE |
+| "onboard", "onboarding docs", "new contributor" | EXPLORE (`/onboarding`) |
 | "write tests", "audit coverage", "validate" | AUDIT |
 | "slower model", "faster model", "change model", "opus", "haiku" | CONFIG |
-| "update tools", "upgrade", "get latest", "update everything" | CONFIG (/update) |
-| "new tools", "discover", "trending", "what's new", "find plugins" | CONFIG (/discover) |
-| "add a tool", "integrate", "bring in", "install this", "add this repo", "add best practices" | CONFIG (/integrate) |
-| "validate the idea", "should I build this" | THINK |
+| "update tools", "upgrade", "get latest", "update everything" | CONFIG (`/update`) |
+| "new tools", "discover", "trending", "what's new", "find plugins" | CONFIG (`/discover`) |
+| "add a tool", "integrate", "bring in", "install this" | CONFIG (`/integrate`) |
+| "too many permission prompts", "optimize permissions" | CONFIG (`/claude-permissions-optimizer`) |
 | "design it", "UI design", "design system" | DESIGN |
+| "changelog", "what shipped" | SHIP (`/changelog`) |

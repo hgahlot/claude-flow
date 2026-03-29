@@ -60,11 +60,56 @@ Key commands:
 | `/design-consultation` | Build complete DESIGN.md + HTML preview from scratch |
 | `/design-review` | Live site visual audit via screenshots |
 
+### Compound Engineering (by Every) — GLOBAL PLUGIN
+Installed via plugin marketplace. AI skills and agents that make each unit of engineering work easier than the last. Philosophy: 80% planning and review, 20% execution. Each cycle compounds.
+
+**Core workflow:** Brainstorm → Plan → Work → Review → Compound
+
+| Command | Purpose |
+|---|---|
+| `/ce:ideate` | Discover high-impact project improvements through divergent ideation |
+| `/ce:brainstorm` | Explore requirements and approaches before planning |
+| `/ce:plan` | Turn ideas into detailed implementation plans with repo-aware research |
+| `/ce:work` | Execute plans with worktrees and task tracking |
+| `/ce:review` | Multi-agent tiered code review with confidence-gated findings |
+| `/ce:compound` | Document learnings to make future work easier |
+| `/ce:compound-refresh` | Refresh stale learnings against current codebase |
+
+**Additional skills:**
+
+| Command | Purpose |
+|---|---|
+| `/agent-browser` | Browser automation for AI agents |
+| `/frontend-design` | Build web interfaces with genuine design quality |
+| `/onboarding` | Generate ONBOARDING.md for new contributors |
+| `/coding-tutor` | Personalized coding tutorials using your codebase |
+| `/git-commit` | Clear, value-communicating commit messages |
+| `/git-commit-push-pr` | Commit → push → open PR in one step |
+| `/git-worktree` | Manage git worktrees for parallel development |
+| `/git-clean-gone-branches` | Clean up local branches with gone remotes |
+| `/lfg` | Full autonomous engineering workflow |
+| `/slfg` | Full autonomous workflow using swarm mode |
+| `/reproduce-bug` | Systematically reproduce a bug from a GitHub issue |
+| `/resolve-pr-feedback` | Resolve PR review comments in parallel |
+| `/document-review` | Review docs using parallel persona agents |
+| `/claude-permissions-optimizer` | Optimize Claude Code permission allowlists |
+| `/orchestrating-swarms` | Multi-agent swarm coordination |
+| `/todo-create` | Create durable work items in file-based todo system |
+| `/todo-triage` | Review pending todos for approval |
+| `/todo-resolve` | Batch-resolve approved todos |
+| `/feature-video` | Record feature walkthrough video for PR |
+| `/triage-prs` | Triage open pull requests |
+| `/changelog` | Create engaging changelogs from recent merges |
+| `/proof` | Create/edit/share markdown docs via Proof |
+| `/rclone` | Upload/sync files to cloud storage |
+| `/gemini-imagegen` | Generate/edit images via Gemini API |
+| `/test-browser` | Run browser tests on pages affected by current PR |
+
 ### Built-in Slash Commands
 | Command | Purpose |
 |---|---|
 | `/flow` | Unified dev flow guide — tells you the right command for your current stage |
-| `/plan` | Lightweight XML task planner for ad-hoc tasks (not a GSD phase) |
+| `/plan` | Lightweight XML task planner (fallback for ad-hoc tasks when `/ce:plan` is overkill) |
 | `/tdd` | Manual TDD trigger |
 | `/checkpoint` | Save current state to STATE.md |
 | `/build-fix` | Systematic root cause debugging |
@@ -90,27 +135,31 @@ THINK → DESIGN → INIT → [ PLAN → BUILD → TEST → REVIEW → ACCEPT ] 
 
 | Situation | Use This | Ignore This |
 |---|---|---|
-| Pre-code product/business decisions | `/office-hours` (gstack) | Superpowers `brainstorming` |
-| Technical design brainstorming | Superpowers `brainstorming` | `/office-hours` |
-| Starting a new feature or phase | `/gsd:discuss-phase` | Superpowers `brainstorming` (auto-triggers — override it) |
-| Creating an implementation plan | `/gsd:plan-phase` | `/plan` command, Superpowers `writing-plans` |
-| Reviewing a plan after `/gsd:plan-phase` | `/autoplan` (gstack) | — |
-| Executing a plan | `/gsd:execute-phase` | Superpowers `subagent-driven-development` |
+| Pre-code product/business decisions | `/office-hours` (gstack) | — |
+| Ideation — discover what to build | `/ce:ideate` (CE) | — |
+| Brainstorming requirements | `/ce:brainstorm` (CE) | Superpowers `brainstorming`, `/office-hours` (use for pure product questions) |
+| Creating an implementation plan | `/ce:plan` (CE) | `/gsd:plan-phase`, `/plan` command |
+| Reviewing a plan after planning | `/autoplan` (gstack) or `/document-review` (CE) | — |
+| Executing a plan | `/ce:work` (CE) | `/gsd:execute-phase` |
+| Full autonomous workflow | `/lfg` or `/slfg` (CE) | `/gsd:autonomous` |
 | Enforcing TDD | Superpowers `test-driven-development` (auto) | `/tdd` command (manual fallback) |
-| Automated QA with browser | `/qa` (gstack) | — |
-| Code review before merge | `/review` (gstack) | — |
+| Automated QA with browser | `/qa` (gstack) | `/test-browser` (CE, for PR-scoped browser tests) |
+| Code review before merge | `/ce:review` (CE) | `/review` (gstack), `/codex` |
 | Live visual design audit | `/design-review` (gstack) | `/gsd:ui-review` (fallback if no browser) |
+| Frontend implementation | `/frontend-design` (CE) | `/gsd:ui-phase` (fallback) |
 | Acceptance testing | `/gsd:verify-work` | — |
-| Full release | `/ship` (gstack) | `/gsd:ship` (lightweight phase PRs only) |
+| Committing changes | `/git-commit` (CE) | — |
+| Full release (commit → PR) | `/git-commit-push-pr` (CE) | `/ship` (gstack, for version bumps + CHANGELOG) |
 | Deployment + canary | `/land-and-deploy` → `/canary` (gstack) | — |
 | Performance regression | `/benchmark` (gstack) | — |
-| Production debugging | `/investigate` (gstack) | `/gsd:debug` (dev-time) |
+| Production debugging | `/investigate` (gstack) | `/gsd:debug` (dev-time), `/reproduce-bug` (CE, from GitHub issues) |
 | Weekly retrospective | `/retro` (gstack) | — |
 | Quick one-off task | `/gsd:quick` or `/plan` | Don't start full GSD lifecycle |
-| UI implementation | `/gsd:ui-phase` → ui-ux-pro-max → `/gsd:ui-review` | — |
+| Document learnings | `/ce:compound` (CE) | — |
+| Resolve PR feedback | `/resolve-pr-feedback` (CE) | — |
 | Safety during risky operations | `/careful` + `/guard` (gstack) | — |
 
-**The rule:** GSD owns the feature lifecycle. gstack owns the release pipeline. Superpowers enforces TDD and debugging in-task. Claude-Mem and UI/UX Pro Max are purely additive.
+**The rule:** CE owns the feature lifecycle (brainstorm → plan → work → review → compound). gstack owns the release pipeline and live-site tools. GSD provides project scaffolding, state management, and session continuity. Superpowers enforces TDD in-task.
 
 ---
 
